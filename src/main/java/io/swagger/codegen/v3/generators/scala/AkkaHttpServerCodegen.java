@@ -1,8 +1,10 @@
 package io.swagger.codegen.v3.generators.scala;
 
 import io.swagger.codegen.v3.*;
+import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,9 +74,9 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
         Boolean hasComplexTypes = Boolean.FALSE;
         Boolean hasCookieParams = Boolean.FALSE;
         Set<String> complexRequestTypes = new HashSet<>();
-        Set<String> complexReturnTypes = new HashSet<>();
+        List<ComplexParameter> complexReturnTypes = new ArrayList<>();
         for (CodegenOperation op : operationList) {
-            Set<String> complexOperationReturnTypes = new HashSet<>();
+            List<ComplexParameter> complexOperationReturnTypes = new ArrayList<>();
             for(CodegenParameter parameter : op.allParams) {
                 if(!parameter.getIsPrimitiveType()){
                     if(parameter.getIsBodyParam()){
@@ -89,8 +91,8 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
             for(CodegenResponse response : op.responses) {
                 if(!response.getIsPrimitiveType()){
                     hasComplexTypes = Boolean.TRUE;
-                    complexReturnTypes.add(response.dataType);
-                    complexOperationReturnTypes.add(response.dataType);
+                    complexReturnTypes.add(ComplexParameter.fromCodegenResponse(response));
+                    complexOperationReturnTypes.add(ComplexParameter.fromCodegenResponse(response));
                 }
             }
             op.getVendorExtensions().put("complexReturnTypes", complexOperationReturnTypes);
@@ -287,5 +289,57 @@ class TextOrMatcher {
     @Override
     public int hashCode() {
         return Objects.hash(value, isText, hasMore);
+    }
+}
+
+class ComplexParameter {
+    private String fieldName;
+    private String type;
+
+    private ComplexParameter(String fieldName, String type) {
+        this.fieldName = fieldName;
+        this.type = type;
+    }
+
+    static public ComplexParameter fromCodegenResponse(CodegenResponse response) {
+        if (response.schema instanceof ArraySchema) {
+            return new ComplexParameter(response.baseType + "List", "List["+response.baseType+"]");
+        } else {
+            return new ComplexParameter(response.baseType, response.baseType);
+        }
+    }
+
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public String getFieldNameCamelCased() {
+        return DefaultCodegenConfig.camelize(fieldName);
+    }
+
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ComplexParameter that = (ComplexParameter) o;
+        return Objects.equals(fieldName, that.fieldName) &&
+                Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fieldName, type);
     }
 }
