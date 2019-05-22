@@ -179,18 +179,18 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
                                     " and therefore has been translated to string.");
                             matcher = pathTypeToMatcher.get(FALLBACK_DATA_TYPE);
                         }
-                        textOrMatcher.value = matcher;
-                        textOrMatcher.isText = false;
+                        textOrMatcher.setValue(matcher);
+                        textOrMatcher.setText(false);
                         result.add(textOrMatcher);
                     }
                 }
             } else {
-                textOrMatcher.value = path;
-                textOrMatcher.isText = true;
+                textOrMatcher.setValue(path);
+                textOrMatcher.setText(true);
                 result.add(textOrMatcher);
             }
         }
-        result.getLast().hasMore = false;
+        result.getLast().setHasMore(false);
         return result;
     }
 
@@ -264,13 +264,37 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
 }
 
 class TextOrMatcher {
-    String value;
-    boolean isText;
-    boolean hasMore;
+    private String value;
+    private boolean isText;
+    private boolean hasMore;
 
     public TextOrMatcher(String value, boolean isText, boolean hasMore) {
         this.value = value;
         this.isText = isText;
+        this.hasMore = hasMore;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public boolean isText() {
+        return isText;
+    }
+
+    public void setText(boolean text) {
+        isText = text;
+    }
+
+    public boolean isHasMore() {
+        return hasMore;
+    }
+
+    public void setHasMore(boolean hasMore) {
         this.hasMore = hasMore;
     }
 
@@ -287,5 +311,14 @@ class TextOrMatcher {
     @Override
     public int hashCode() {
         return Objects.hash(value, isText, hasMore);
+    }
+
+    @Override
+    public String toString() {
+        return "TextOrMatcher{" +
+                "value='" + value + '\'' +
+                ", isText=" + isText +
+                ", hasMore=" + hasMore +
+                '}';
     }
 }

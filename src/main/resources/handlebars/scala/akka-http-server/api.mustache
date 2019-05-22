@@ -1,0 +1,23 @@
+package {{package}}
+
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+{{^operations.complexRequestTypes.isEmpty}}import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
+import akka.http.scaladsl.marshalling.ToEntityMarshaller
+{{/operations.complexRequestTypes.isEmpty}}
+{{#hasCookieParams}}import akka.http.scaladsl.model.headers.HttpCookiePair
+{{/hasCookieParams}}
+import {{invokerPackage}}.AkkaHttpHelper._
+{{#imports}}import {{import}}
+{{/imports}}
+
+{{#operations}}
+  lazy val route: Route =
+  {{#operation}}
+      path({{#each vendorExtensions.paths}}
+          {{#if isText}}a{{/if}} , {{#if this.isText}}b{{/if}} , {{#if ../isText}}c{{/if}} , {{#isText}}d{{/isText}} , {{!#is isText}}e{{!is}} ,
+          {{#is .. paths.isText}}f{{/is}}
+          {{..}}
+      {{/each}})
+  {{/operation}}
+{{/operations}}
