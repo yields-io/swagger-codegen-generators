@@ -42,28 +42,28 @@ class {{classname}}(
 trait {{classname}}Service {
 
 {{#operation}}
-{{#responses}}  def {{operationId}}{{code}}{{#baseType}}(response{{baseType}}{{containerType}}: {{dataType}}){{^isPrimitiveType}}(implicit toEntityMarshaller{{baseType}}{{containerType}}: ToEntityMarshaller[{{dataType}}]){{/isPrimitiveType}}{{/baseType}}: Route =
+{{#responses}}  def {{operationId}}{{code}}{{#dataType}}(response{{allComplexTypes.dataType}}: {{dataType}}){{^isPrimitiveType}}(implicit toEntityMarshaller{{baseType}}{{containerType}}: ToEntityMarshaller[{{dataType}}]){{/isPrimitiveType}}{{/dataType}}: Route =
     complete(({{code}}, {{#baseType}}response{{baseType}}{{containerType}}{{/baseType}}{{^baseType}}"{{message}}"{{/baseType}}))
 {{/responses}}
   /**
 {{#responses}}   * {{#code}}Code: {{.}}{{/code}}{{#message}}, Message: {{.}}{{/message}}{{#dataType}}, DataType: {{.}}{{/dataType}}
    {{/responses}}
    */
-  def {{operationId}}({{#vendorExtensions.paramsWithSupportedType}}{{paramName}}: {{^required}}{{^isBodyParam}}Option[{{/isBodyParam}}{{/required}}{{dataType}}{{^required}}{{^isBodyParam}}]{{/isBodyParam}}{{/required}}{{#hasMore}}, {{/hasMore}}{{/vendorExtensions.paramsWithSupportedType}}){{^vendorExtensions.complexReturnTypes.isEmpty}}
-      (implicit {{#vendorExtensions.complexReturnTypes}}toEntityMarshaller{{baseType}}{{containerType}}: ToEntityMarshaller[{{dataType}}]{{^-last}}, {{/-last}}{{/vendorExtensions.complexReturnTypes}}){{/vendorExtensions.complexReturnTypes.isEmpty}}: Route
+  def {{operationId}}({{#vendorExtensions.paramsWithSupportedType}}{{paramName}}: {{^required}}{{^isBodyParam}}Option[{{/isBodyParam}}{{/required}}{{dataType}}{{^required}}{{^isBodyParam}}]{{/isBodyParam}}{{/required}}{{#hasMore}}, {{/hasMore}}{{/vendorExtensions.paramsWithSupportedType}})
+        {{^vendorExtensions.returnImplicitMarchallerTypes.isEmpty}}(implicit {{#vendorExtensions.returnImplicitMarchallerTypes}}toEntityMarshaller{{fieldNameCamelCased}}: ToEntityMarshaller[{{type}}]{{^-last}}, {{/-last}}{{/vendorExtensions.returnImplicitMarchallerTypes}}){{/vendorExtensions.returnImplicitMarchallerTypes.isEmpty}}: Route
 
 {{/operation}}
 }
 
 {{#hasComplexTypes}}
 trait {{classname}}Marshaller {
-{{#complexRequestTypes}}  implicit def fromRequestUnmarshaller{{.}}: FromRequestUnmarshaller[{{.}}]
+{{#requestMarchallerTypes}}  implicit def fromRequestUnmarshaller{{fieldNameCamelCased}}: FromRequestUnmarshaller[{{type}}]
 
-{{/complexRequestTypes}}
+{{/requestMarchallerTypes}}
 
-{{#complexReturnTypes}}  implicit def toEntityMarshaller{{fieldNameCamelCased}}: ToEntityMarshaller[{{type}}]
+{{#returnMarchallerTypes}}  implicit def toEntityMarshaller{{fieldNameCamelCased}}: ToEntityMarshaller[{{type}}]
 
-{{/complexReturnTypes}}
+{{/returnMarchallerTypes}}
 }
 {{/hasComplexTypes}}
 

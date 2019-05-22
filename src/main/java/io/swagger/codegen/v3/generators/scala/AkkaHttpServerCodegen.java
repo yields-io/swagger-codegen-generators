@@ -73,15 +73,18 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
         List<CodegenOperation> operationList = (List<CodegenOperation>) operations.get("operation");
         Boolean hasComplexTypes = Boolean.FALSE;
         Boolean hasCookieParams = Boolean.FALSE;
-        Set<String> complexRequestTypes = new HashSet<>();
-        List<ComplexParameter> complexReturnTypes = new ArrayList<>();
+        Map<String, ComplexDataType> allComplexTypes = new HashMap<>();
+        Map<String, ComplexDataType> requestMarchallerTypes = new HashMap<>();
+        Map<String, ComplexDataType> returnMarchallerTypes = new HashMap<>();
         for (CodegenOperation op : operationList) {
-            List<ComplexParameter> complexOperationReturnTypes = new ArrayList<>();
+            Map<String, ComplexDataType> complexOperationReturnTypes = new HashMap<>();
             for(CodegenParameter parameter : op.allParams) {
                 if(!parameter.getIsPrimitiveType()){
                     if(parameter.getIsBodyParam()){
                         hasComplexTypes = Boolean.TRUE;
-                        complexRequestTypes.add(parameter.dataType);
+                        ComplexDataType complexDataType = ComplexDataType.from(parameter);
+                        requestMarchallerTypes.put(parameter.baseType, complexDataType);
+                        allComplexTypes.put(parameter.baseType, complexDataType);
                     }
                 }
                 if(parameter.getIsCookieParam()){
@@ -91,16 +94,19 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
             for(CodegenResponse response : op.responses) {
                 if(!response.getIsPrimitiveType()){
                     hasComplexTypes = Boolean.TRUE;
-                    complexReturnTypes.add(ComplexParameter.fromCodegenResponse(response));
-                    complexOperationReturnTypes.add(ComplexParameter.fromCodegenResponse(response));
+                    ComplexDataType from = ComplexDataType.from(response);
+                    returnMarchallerTypes.put(response.baseType, from);
+                    complexOperationReturnTypes.put(response.baseType, ComplexDataType.from(response));
+                    allComplexTypes.put(response.baseType, from);
                 }
             }
-            op.getVendorExtensions().put("complexReturnTypes", complexOperationReturnTypes);
+            op.getVendorExtensions().put("returnImplicitMarchallerTypes", complexOperationReturnTypes.values());
         }
         objs.put("hasComplexTypes", hasComplexTypes);
         objs.put("hasCookieParams", hasCookieParams);
-        objs.put("complexRequestTypes", complexRequestTypes);
-        objs.put("complexReturnTypes", complexReturnTypes);
+        objs.put("requestMarchallerTypes", requestMarchallerTypes.values());
+        objs.put("returnMarchallerTypes", returnMarchallerTypes.values());
+        objs.put("allComplexTypes", allComplexTypes);
 
         return objs;
     }
@@ -292,20 +298,27 @@ class TextOrMatcher {
     }
 }
 
-class ComplexParameter {
+class ComplexDataType {
     private String fieldName;
     private String type;
 
-    private ComplexParameter(String fieldName, String type) {
+    private ComplexDataType(String fieldName, String type) {
         this.fieldName = fieldName;
         this.type = type;
     }
 
-    static public ComplexParameter fromCodegenResponse(CodegenResponse response) {
+    static public ComplexDataType from(CodegenResponse response) {
         if (response.schema instanceof ArraySchema) {
-            return new ComplexParameter(response.baseType + "List", "List["+response.baseType+"]");
+            return new ComplexDataType(response.baseType + "List", "List["+response.baseType+"]");
         } else {
-            return new ComplexParameter(response.baseType, response.baseType);
+            return new ComplexDataType(response.baseType, response.baseType);
+        }
+    }
+    static public ComplexDataType from(CodegenParameter param) {
+        if (Boolean.valueOf(param.vendorExtensions.getOrDefault(CodegenConstants.IS_LIST_CONTAINER_EXT_NAME, "false").toString())) {
+            return new ComplexDataType(param.baseType + "List", "List["+param.baseType+"]");
+        } else {
+            return new ComplexDataType(param.baseType, param.baseType);
         }
     }
 
@@ -333,7 +346,7 @@ class ComplexParameter {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ComplexParameter that = (ComplexParameter) o;
+        ComplexDataType that = (ComplexDataType) o;
         return Objects.equals(fieldName, that.fieldName) &&
                 Objects.equals(type, that.type);
     }

@@ -7,7 +7,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
@@ -240,10 +239,10 @@ public class AkkaHttpServerCodegenTest {
 
     @Test
     public void testFileGeneration() throws IOException {
-        TemporaryFolder folder = new TemporaryFolder();
-
-        folder.create();
-        final File output = folder.getRoot();
+//        TemporaryFolder folder = new TemporaryFolder();
+//
+//        folder.create();
+        File output = Files.createDirectory(Paths.get("KarolNow")).toFile();
 
         final CodegenConfigurator configurator = new CodegenConfigurator()
                 .setLang("scala-akka-http-server")
