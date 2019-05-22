@@ -71,15 +71,15 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
         List<CodegenOperation> operationList = (List<CodegenOperation>) operations.get("operation");
         Boolean hasComplexTypes = Boolean.FALSE;
         Boolean hasCookieParams = Boolean.FALSE;
-        Set<String> complexRequestTypes = new HashSet<>();
-        Set<String> complexReturnTypes = new HashSet<>();
+        Set<String> requestMarchalledTypes = new HashSet<>();
+        Set<String> returnMarchalledTypes = new HashSet<>();
         for (CodegenOperation op : operationList) {
             Set<String> complexOperationReturnTypes = new HashSet<>();
             for(CodegenParameter parameter : op.allParams) {
                 if(!parameter.getIsPrimitiveType()){
                     if(parameter.getIsBodyParam()){
                         hasComplexTypes = Boolean.TRUE;
-                        complexRequestTypes.add(parameter.dataType);
+                        requestMarchalledTypes.add(parameter.baseType);
                     }
                 }
                 if(parameter.getIsCookieParam()){
@@ -89,16 +89,16 @@ public class AkkaHttpServerCodegen extends AbstractScalaCodegen  {
             for(CodegenResponse response : op.responses) {
                 if(!response.getIsPrimitiveType()){
                     hasComplexTypes = Boolean.TRUE;
-                    complexReturnTypes.add(response.dataType);
-                    complexOperationReturnTypes.add(response.dataType);
+                    returnMarchalledTypes.add(response.baseType);
+                    complexOperationReturnTypes.add(response.baseType);
                 }
             }
-            op.getVendorExtensions().put("complexReturnTypes", complexOperationReturnTypes);
+            op.getVendorExtensions().put("returnMarchalledTypes", complexOperationReturnTypes);
         }
         objs.put("hasComplexTypes", hasComplexTypes);
         objs.put("hasCookieParams", hasCookieParams);
-        objs.put("complexRequestTypes", complexRequestTypes);
-        objs.put("complexReturnTypes", complexReturnTypes);
+        objs.put("requestMarchalledTypes", requestMarchalledTypes);
+        objs.put("returnMarchalledTypes", returnMarchalledTypes);
 
         return objs;
     }
