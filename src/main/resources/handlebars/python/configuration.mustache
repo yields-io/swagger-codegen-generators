@@ -54,7 +54,10 @@ class Configuration(six.with_metaclass(TypeWithDefault, object)):
 {{#authMethods}}{{#isOAuth}}
         # access token for OAuth
         self.access_token = ""
-{{/isOAuth}}{{/authMethods}}
+{{/isOAuth}}{{#vendorExtensions.x-is-bearer}}
+        # token for bearer authentication scheme
+        self.bearer_token = ""
+{{/vendorExtensions.x-is-bearer}}{{/authMethods}}
         # Logging Settings
         self.logger = {}
         self.logger["package_logger"] = logging.getLogger("{{packageName}}")
@@ -236,7 +239,17 @@ class Configuration(six.with_metaclass(TypeWithDefault, object)):
                     'key': 'Authorization',
                     'value': self.get_basic_auth_token()
                 },
-{{/isBasic}}{{#isOAuth}}
+{{/isBasic}}
+{{#vendorExtensions.x-is-bearer}}
+            '{{name}}':
+                {
+                    'type': 'bearer',
+                    'in': 'header',
+                    'key': 'Authorization',
+                    'value': 'Bearer ' + self.bearer_token
+                },
+{{/vendorExtensions.x-is-bearer}}
+{{#isOAuth}}
             '{{name}}':
                 {
                     'type': 'oauth2',
